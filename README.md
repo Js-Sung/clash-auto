@@ -7,7 +7,8 @@
 3. 按照自己的需求自定义az6.sh和template.yaml中的配置字段，然后执行az6.sh，看到下面的信息表示启动成功。
 ![Image](pic.png)
 4. 把az6.sh加入到crontab中以实现定时启动，如下面内容可实现每天在04:02执行脚本
-`2 4 * * *       /mypath/clash/az6.sh &`
+
+```2 4 * * *       /mypath/az6.sh &```
 
 ## 其他说明
 - template.yaml的规则和版式可能比较陈旧了，如有需求请自行修改。
