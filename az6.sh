@@ -2,9 +2,9 @@
 
 # basic configurations
 TMPLTFILE="template.yaml"
-BIN="/opt/clash/clash-linux-armv8"    # clash主体执行文件的绝对路径
+BIN="/opt/clash/clash-linux-armv8"
 URL=(
-#"https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.yml"    # 不好用
+#"https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.yml"
 "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/sub/sub_merge_clash.yaml"
 )
 
@@ -13,10 +13,10 @@ LOCKFILE="/tmp/clash.lock"
 
 # curl configurations
 TRYS_CURL=5
-#PROXY_CURL='socks5://192.168.1.1:1080'      # 如果你想通过代理下载节点数据，取消注释该参数
+PROXY_CURL='socks5://192.168.8.1:1088'
 
 # temp file
-TEMPFILE="/tmp/tmp_clashdata"	
+TEMPFILE="/tmp/tmp_clashdata"			
 
 
 # error msg
@@ -47,9 +47,9 @@ function genCFGFile()
 	nodes=$(for url0 in ${URL[@]}
 	do
 		doc=$(curl -# --retry-all-errors --retry "$TRYS_CURL" ${PROXY_CURL:+-x $PROXY_CURL} --fail "$url0")
-		echo "$doc" | gojq -c '.proxies[]' --yaml-input
+		echo "$doc" | sed -E "/password\s*:\s*\S*:+\S*\s*,/s/(password\s*:)\s*([^\"', ]*:+[^\"',]*)\s*(,)/\1 \"\2\"\3/gi" | gojq -c '.proxies[]' --yaml-input
 	done | sed -E '/^\s*$/d')
-	#nodes=$(cat sub_merge_clash.yaml | gojq -c '.proxies[]' --yaml-input | sed -E '/^\s*$/d')
+	
 	if [ -z "$nodes" ]
 	then
 		log_e "no valid nodes fetched."
@@ -60,11 +60,11 @@ function genCFGFile()
 	# 插入信息节点
 	# 更改不支持的加密算法：ssr?:chacha20 ---> xchacha20;; ss:chacha20-poly1305 ----> chacha20-ietf-poly1305
 	# TLS must be true with h2/grpc network
-	nodes=$(echo "$nodes" | sed -E -e '$a'"{\"name\": \"更新时间：$(date "+%Y-%m-%d %H:%M:%S")\", \"server\": \"www.w3school.com.cn\", \"port\": 2, \"type\": \"ss\", \"cipher\": \"xchacha20\", \"password\": \"1\"}" -e '/\"type\":\"ssr?\"/{s/(\"cipher\":\")(chacha20\")/\1x\2/gi;/\"type\":\"ss\"/s/(\"cipher\":\"chacha20)(-poly1305\")/\1-ietf\2/gi};/\"network\":\"grpc\"/{/\"tls\":false/s/(\"tls\":)false/\1true/gi}')
+	nodes=$(echo "$nodes" | sed -E -e '$a'"{\"name\": \"更新时间：$(date "+%Y-%m-%d %H:%M:%S")\", \"server\": \"www.w3school.com.cn\", \"port\": 2, \"type\": \"ss\", \"cipher\": \"xchacha20\", \"password\": \"1\"}" -e '/\"type\":\"ssr?\"/{s/(\"cipher\":\")(chacha20\")/\1x\2/gi;/\"type\":\"ss\"/s/(\"cipher\":\"chacha20)(-poly1305\")/\1-ietf\2/gi};/\"network\":\"(grpc|h2)\"/{/\"tls\":false/s/(\"tls\":)false/\1true/gi}')
 	# 节点名分类
 	names_all=$(echo "$nodes" | gojq -c '.name' | sed -E 's/^/      - /;')
-	names_cn=$(echo "$names_all" | sed -nE '/香港|台湾|澳门/!{/🇨🇳|(中|回)国|电信|移动|联通/p}')
-	names_foreign=$(echo "$names_all" | sed -E '/🇨🇳|(中|回)国|电信|移动|联通|时间|剩余流量/{/香港|台湾|澳门/!d}')
+	names_cn=$(echo "$names_all" | sed -nE '/香港|台湾|澳门/!{/🇨🇳|(中|回)国|电信|移动|联通|省|市/p}')
+	names_foreign=$(echo "$names_all" | sed -E '/🇨🇳|(中|回)国|电信|移动|联通|省|市|时间|剩余流量/{/香港|台湾|澳门/!d}')
 	names_info=$(echo "$names_all" | sed -nE '/时间|剩余流量/p')
 
 	num=$(echo "$names_foreign" | sed -E '/^\s*$/d' | wc -l)
@@ -189,7 +189,7 @@ cd $(dirname "$0")
 
 {
 	flock -n 198
-	[ $? = 1 ] && { log_e "failed to get lock file. Is it runing already?"; exit 40; }
+	[ $? = 1 ] && { log_e "failed to get lock file, its runing already?"; exit 40; }
 	
 	genCFGFile
 	ret=$?
