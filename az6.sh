@@ -2,9 +2,9 @@
 
 # basic configurations
 TMPLTFILE="template.yaml"
-BIN="/opt/clash/clash-linux-armv8"
+BIN="/opt/clash/clash-linux-armv8"    # clash主体执行文件的绝对路径
 URL=(
-#"https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.yml"
+#"https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.yml"    # 不好用
 "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/sub/sub_merge_clash.yaml"
 )
 
@@ -13,10 +13,10 @@ LOCKFILE="/tmp/clash.lock"
 
 # curl configurations
 TRYS_CURL=5
-PROXY_CURL='socks5://192.168.8.1:1088'
+#PROXY_CURL='socks5://192.168.1.1:1080'      # 如果你想通过代理下载节点数据，取消注释该参数
 
 # temp file
-TEMPFILE="/tmp/tmp_clashdata"			
+TEMPFILE="/tmp/tmp_clashdata"	
 
 
 # error msg
